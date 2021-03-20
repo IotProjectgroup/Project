@@ -1,0 +1,13 @@
+int speaker = 13; //setting the pin locztion of the speaker
+void setup() {
+  //this code can be used with the buzzer for arduino
+  
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  tone(speaker, 550);     //tone to play when code is run
+  delay(500);
+  noTone(speaker);    //no tone played
+  delay(500);   //delay
+}
