@@ -1,0 +1,68 @@
+#include <Wire.h>
+#include "rgb_lcd.h"
+rgb_lcd lcd;
+
+int colorR;
+int colorG;
+int colorB;
+
+int pirSensor = 10;
+int touchsensor = A2;
+
+int buzzer = 5;
+void setup() {
+  // put your setup code here, to run once:
+pinMode(pirSensor, INPUT);
+pinMode(buzzer, OUTPUT);
+pinMode(touchsensor, INPUT);
+ Serial.begin(9600);
+   lcd.begin(16,2);
+      colorR = 0; colorG = 0; colorB = 0;
+      lcd.setRGB(colorR, colorG, colorB);
+
+}
+
+void loop() {
+  // put your main code here, to run repeatedly:
+  int num = 0;int check = 10;
+ if(digitalRead(pirSensor) == HIGH)
+ {
+  num = 1;  
+ }
+ if(num == 1)
+ {
+  lcd.begin(16,2);
+      colorR = 0; colorG = 0; colorB = 255;  //sets the display colors
+        lcd.setRGB(colorR, colorG, colorB);       
+         lcd.print("Please sanitize before entry.");
+         delay(5000);
+    
+    for(int i = 0; check == 10; i++){
+      tone(buzzer, 500);
+      delay(1000);
+      noTone(buzzer);
+      delay(500);
+    if(digitalRead(touchsensor) == HIGH)
+             {
+                  check = 11; 
+             } 
+        } 
+         check = 10;
+       noTone(buzzer);              
+       lcd.begin(16,2);
+       colorR = 255; colorG = 0; colorB = 0;
+       lcd.setRGB(colorR, colorG, colorB);
+       lcd.print("Keep Safe! :)");
+       delay(10000);
+      
+       
+    }
+    else 
+    {
+      lcd.begin(16,2);
+      colorR = 0; colorG = 0; colorB = 0;
+      lcd.setRGB(colorR, colorG, colorB);
+      }
+   
+    
+}
