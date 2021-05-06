@@ -1,3 +1,33 @@
+/*
+Derived from Yún HTTP Client Sketch
+ This example for the Arduino Yún shows how create a basic
+ HTTP client that connects to the internet and downloads
+ content. In this case, you'll connect to the Arduino
+ website and download a version of the logo as ASCII text.
+ created by Tom igoe
+ May 2013
+ This example code is in the public domain.
+ http://www.arduino.cc/en/Tutorial/HttpClient
+ Additions added by Mary Loftus April 2018 
+ - adapted from example by Tom DeBell - August 2017 - http://www.open-sensing.org/evaporometerblog/datalog
+ */
+
+
+  /////////////////
+ // MODIFY HERE //
+/////////////////
+
+// Add your PushingBox Scenario DeviceID here:
+  char devid[] = "vBEA863267A6C838";
+  
+  //////////////
+ //   End    //
+//////////////
+
+char serverName[] = "api.pushingbox.com";
+boolean DEBUG = true;
+#include <Bridge.h>
+#include <HttpClient.h>
 #include <Wire.h>
 #include "rgb_lcd.h"
 rgb_lcd lcd;
@@ -5,27 +35,41 @@ rgb_lcd lcd;
 int colorR;
 int colorG;
 int colorB;
-
-int pirSensor = 10;
+int totalNum = 0; int currentNum = 0; int num = 0;
+int number = 0;
+/*all these inputs can be changed to suite your device*/
+int pirSensorEntra = 10;
 int touchsensor = A2;
+int pirSensorCheck = 7;
 
 int buzzer = 5;
+
 void setup() {
-  // put your setup code here, to run once:
-pinMode(pirSensor, INPUT);
+  // Bridge takes about two seconds to start up
+  // it can be helpful to use the on-board LED
+  // as an indicator for when it has initialized
+  pinMode(13, OUTPUT);
+  digitalWrite(13, LOW);
+  Bridge.begin();
+  digitalWrite(13, HIGH);
+pinMode(pirSensorEntra, INPUT);
+pinMode(pirSensorCheck, INPUT);
 pinMode(buzzer, OUTPUT);
 pinMode(touchsensor, INPUT);
  Serial.begin(9600);
    lcd.begin(16,2);
       colorR = 0; colorG = 0; colorB = 0;
       lcd.setRGB(colorR, colorG, colorB);
-
+  
+  
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  int num = 0;int check = 10;
- if(digitalRead(pirSensor) == HIGH)
+  // Initialize the client library
+  HttpClient client;
+ int check = 0;
+  //Setup sensorValue to read a value from Analog Port A0
+  if(digitalRead(pirSensorEntra) == HIGH)
  {
   num = 1;  
  }
@@ -33,36 +77,56 @@ void loop() {
  {
   lcd.begin(16,2);
       colorR = 0; colorG = 0; colorB = 255;  //sets the display colors
-        lcd.setRGB(colorR, colorG, colorB);       
-         lcd.print("Please sanitize before entry.");
-         delay(5000);
-    
-    for(int i = 0; check == 10; i++){
+      lcd.setRGB(colorR, colorG, colorB);       
+      lcd.print("Please sanitize before entry.");
+      if(digitalRead(touchsensor) == HIGH)
+             {
+              totalNum++;
+              currentNum++;
+                  check = 1; 
+                    lcd.begin(16,2);
+                  colorR = 255; colorG = 0; colorB = 0;
+                  lcd.setRGB(colorR, colorG, colorB);
+                lcd.print("Keep Safe....");
+                   delay(8000);
+                   }
+     
+    if((digitalRead(pirSensorCheck)==HIGH)&&(check==0)){
+      for(int i = 0; check == 0; i++){
+      noTone(buzzer);
+      delay(3000);
       tone(buzzer, 500);
       delay(1000);
       noTone(buzzer);
       delay(500);
-    if(digitalRead(touchsensor) == HIGH)
-             {
-                  check = 11; 
-             } 
-        } 
-         check = 10;
-       noTone(buzzer);              
-       lcd.begin(16,2);
-       colorR = 255; colorG = 0; colorB = 0;
-       lcd.setRGB(colorR, colorG, colorB);
-       lcd.print("Keep Safe! :)");
-       delay(10000);
       
-       
-    }
-    else 
-    {
-      lcd.begin(16,2);
-      colorR = 0; colorG = 0; colorB = 0;
-      lcd.setRGB(colorR, colorG, colorB);
       }
-   
     
+                  
+                   
+                    
+
+    }         
+          
+          
+ }
+
+    
+  if(number!= currentNum){
+  String APIRequest;
+  APIRequest = String(serverName) + "/pushingbox?devid=" + String(devid)+ "&TotalCustomers=" + totalNum + "&CurrentCustomers="+currentNum;
+  client.get (APIRequest);
+  number = currentNum;
+  // if there are incoming bytes available
+  // from the server, read them and print them:
+  while (client.available()) {
+    char c = client.read();
+  }
+
+  }
+  Serial.flush();
+  String UploadMessage;
+  Serial.print("\n Uploaded temp value: ");
+  Serial.print(currentNum);
+  delay(5000);
 }
